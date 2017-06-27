@@ -1,0 +1,24 @@
+<resources>
+    <string name="add_description">Add Description</string>
+    <string name="add_image">Please add some images</string>>
+    <string name="add_hint">Add Hints</string>
+    <string name="app_name">Explorer</string>
+    <string name="title_activity_main2">Main2Activity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_add_place">Map</string>
+    <string name="permission_fine_location_rationale">If you deny location permission it will be harder to set a point on a map!</string>
+    <string name="button_allow">Allow</string>
+    <string name="button_deny">Deny</string>
+    <string name="permission_fine_location_denied">Permission denied</string>
+    <string name="permission_fine_location_neverask">We wont ask for this permission again</string>
+    <string name="title_activity_location_test">LocationTestActivity</string>
+    <string name="nextBtn">Next</string>
+    <string name="pick_image_intent_text">Choose a photo</string>
+</resources>
