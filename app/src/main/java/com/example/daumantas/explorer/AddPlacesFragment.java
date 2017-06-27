@@ -29,6 +29,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.lang.reflect.Array;
+
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnNeverAskAgain;
 import permissions.dispatcher.OnPermissionDenied;
@@ -54,6 +56,7 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
     private static final String KEY_LOCATION = "location";
     private float DEFAULT_ZOOM = 10;
     private Marker newPlace;
+    private LatLng previousMarkerLocation;
 
     @Nullable
     @Override
@@ -115,7 +118,9 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
             fm.executePendingTransactions();
         }
         mf.getMapAsync(this);
-
+        if(savedInstanceState!=null){
+            previousMarkerLocation = new LatLng(savedInstanceState.getDouble("markerLat"),savedInstanceState.getDouble("markerLng"));
+        }
     }
 
     @Override
@@ -142,6 +147,10 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
         if (mMap != null) {
             outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
             outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
+            if(newPlace!=null){
+                outState.putDouble("markerLng",newPlace.getPosition().longitude);
+                outState.putDouble("markerLat",newPlace.getPosition().latitude);
+            }
             super.onSaveInstanceState(outState);
         }
     }
@@ -156,7 +165,10 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
 
         //AddPlacesFragmentPermissionsDispatcher.updateLocationUIWithCheck(this); //UpdateLocationUI
 
-        if (mLastKnownLocation != null) {
+        if(previousMarkerLocation!=null){
+            addMarker(previousMarkerLocation);
+        }
+        else if (mLastKnownLocation != null) {
             addMarker(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
         }
 

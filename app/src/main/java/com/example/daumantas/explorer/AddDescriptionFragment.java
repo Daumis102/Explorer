@@ -67,7 +67,6 @@ public class AddDescriptionFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         return inflater.inflate(R.layout.fragment_add_description, container, false);
 
 
@@ -77,12 +76,60 @@ public class AddDescriptionFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
         image1 = (ImageButton)getActivity().findViewById(R.id.image1);
-        image1.setTag("plus");
+
         image2 = (ImageButton)getActivity().findViewById(R.id.image2);
-        image2.setTag("plus");
+
         image3 = (ImageButton)getActivity().findViewById(R.id.image3);
-        image3.setTag("plus");
+
+
+        if (savedInstanceState != null) {
+            String image1Path = savedInstanceState.getString("image1Path");
+            String image2Path = savedInstanceState.getString("image2Path");
+            String image3Path = savedInstanceState.getString("image3Path");
+            if(!image1Path.equals("plus")&&image1Path!=null){
+                Picasso.with(getContext())
+                        .load(new File(image1Path))
+                        .placeholder(R.drawable.ic_loading) // optional
+                        .resize(400,400)
+                        .centerCrop()
+                        .error(R.drawable.ic_error)
+                        .into(image1);
+                image1.setTag(image1Path);
+            }else{
+                image1.setTag("plus");
+            }
+            if(!image2Path.equals("plus")&&image2Path!=null){
+                Picasso.with(getContext())
+                        .load(new File(image2Path))
+                        .placeholder(R.drawable.ic_loading) // optional
+                        .resize(400,400)
+                        .centerCrop()
+                        .error(R.drawable.ic_error)
+                        .into(image2);
+                image2.setTag(image2Path);
+            }else{
+                image2.setTag("plus");
+            }
+            if(!image3Path.equals("plus")&&image3Path!=null){
+                Picasso.with(getContext())
+                        .load(new File(image3Path))
+                        .placeholder(R.drawable.ic_loading) // optional
+                        .resize(400,400)
+                        .centerCrop()
+                        .error(R.drawable.ic_error)
+                        .into(image3);
+                image3.setTag(image3Path);
+            }else{
+                image3.setTag("plus");
+            }
+
+        }else{
+            image1.setTag("plus");
+            image2.setTag("plus");
+            image3.setTag("plus");
+        }
 
         image1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -213,7 +260,7 @@ public class AddDescriptionFragment extends Fragment {
                     .centerCrop()
                     .error(R.drawable.ic_error)
                     .into(currentImage);
-            currentImage.setTag("photo");
+            currentImage.setTag(mCurrentPhotoPath);
 
         }
     }
@@ -238,4 +285,15 @@ public class AddDescriptionFragment extends Fragment {
     @OnNeverAskAgain({android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void openGaleryOnNeverAskAgain() {
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        outState.putString("image1Path",image1.getTag().toString());
+        outState.putString("image2Path",image2.getTag().toString());
+        outState.putString("image3Path",image3.getTag().toString());
+        super.onSaveInstanceState(outState);
+
+    }
+
 }
