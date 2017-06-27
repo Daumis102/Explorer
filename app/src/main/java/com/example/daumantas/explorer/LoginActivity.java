@@ -38,6 +38,22 @@ public class LoginActivity extends AppCompatActivity {
     AlertDialog.Builder builder;
 
 
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("Leave?");
+        builder.setMessage("Would you like to end your adventure?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        builder.setNegativeButton("No", null);
+        builder.show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -79,8 +80,6 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
                         this)
                 .addConnectionCallbacks(this)
                 .addApi(LocationServices.API)
-                //.addApi(Places.GEO_DATA_API)
-                //.addApi(Places.PLACE_DETECTION_API)
                 .build();
         mGoogleApiClient.connect();
     }
@@ -95,7 +94,12 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
         nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity) getActivity()).handleMap(newPlace.getPosition());
+                if(newPlace!=null){
+                    ((MainActivity) getActivity()).handleMap(newPlace.getPosition());
+                }else{
+                    Toast.makeText(mContext, "Tap on map or drag marker to select location", Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 

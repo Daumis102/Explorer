@@ -1,11 +1,7 @@
 package com.example.daumantas.explorer;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,7 +13,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +21,6 @@ import android.widget.ImageButton;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -193,21 +187,6 @@ public class AddDescriptionFragment extends Fragment {
                                     Intent imageData) {
         super.onActivityResult(requestCode, resultCode, imageData);
 
-                    /*
-                    Uri pickedImage = imageData.getData();
-                    // Let's read picked image path using content resolver
-                    String[] filePath = {MediaStore.Images.Media.DATA};
-                    Cursor cursor = getActivity().getContentResolver().query(pickedImage, filePath, null, null, null);
-                    cursor.moveToFirst();
-                    String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
-
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                    Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);
-                    */
-
-        //Bitmap bitmap = ImagePicker.getImageFromResult(getActivity(), resultCode, imageData);
-
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK) {
 
             Uri selectedImage;
@@ -237,26 +216,6 @@ public class AddDescriptionFragment extends Fragment {
             currentImage.setTag("photo");
 
         }
-    }
-
-    private static Bitmap decodeBitmap(Context context, Uri theUri, int sampleSize) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sampleSize;
-
-        AssetFileDescriptor fileDescriptor = null;
-        try {
-            fileDescriptor = context.getContentResolver().openAssetFileDescriptor(theUri, "r");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        Bitmap actuallyUsableBitmap = BitmapFactory.decodeFileDescriptor(
-                fileDescriptor.getFileDescriptor(), null, options);
-
-        Log.d("mytag", options.inSampleSize + " sample method bitmap ... " +
-                actuallyUsableBitmap.getWidth() + " " + actuallyUsableBitmap.getHeight());
-
-        return actuallyUsableBitmap;
     }
 
     @Override

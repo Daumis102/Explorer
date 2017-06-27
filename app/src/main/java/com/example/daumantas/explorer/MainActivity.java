@@ -1,6 +1,7 @@
 package com.example.daumantas.explorer;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -10,6 +11,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -33,10 +35,9 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Realm.init(this); //initialize other plugins
 
         if (savedInstanceState != null){
-            fragment = (Fragment) getSupportFragmentManager().findFragmentByTag(TAG_MY_FRAGMENT);
+            fragment = getSupportFragmentManager().findFragmentByTag(TAG_MY_FRAGMENT);
             name = savedInstanceState.getString("name");
             Auth = savedInstanceState.getBoolean("auth");
             Log.d("mytag","SavedInstance != null");
@@ -90,8 +91,8 @@ public class MainActivity extends AppCompatActivity
                 welcome.setArguments(bundle);
                 fragmentTransaction.add(R.id.fragment_container, welcome);
                 fragmentTransaction.commit();
-
-
+            }else{
+                finish();
             }
         }
     }
@@ -117,7 +118,25 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+
+            int count = getSupportFragmentManager().getBackStackEntryCount();
+            if(count==0){
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+                builder.setTitle("Leave?");
+                builder.setMessage("Would you like to end your adventure?");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+                builder.setNegativeButton("No", null);
+                builder.show();
+            }else{
+                super.onBackPressed();
+            }
+
         }
     }
 
@@ -156,6 +175,7 @@ public class MainActivity extends AppCompatActivity
         fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, fragment, TAG_MY_FRAGMENT)
+                .addToBackStack(null)
                 .commit();
     }
 
@@ -170,8 +190,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        Fragment fragment = null;
-        Class fragmentClass = null;
 
         int id = item.getItemId();
 
@@ -182,22 +200,6 @@ public class MainActivity extends AppCompatActivity
             //fragmentClass = Places.class;
             changeFragment(Places.class);
         }
-
-        /*try {
-            fragment = (Fragment) fragmentClass.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Insert the fragment by replacing any existing fragment
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.fragment_container, fragment).commit();
-        */
-
-        // Highlight the selected item has been done by NavigationView
-        //item.setChecked(true);
-        // Set action bar title
-        //setTitle(item.getTitle());
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
