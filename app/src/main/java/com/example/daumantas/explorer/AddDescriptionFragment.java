@@ -25,6 +25,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import com.squareup.picasso.Picasso;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,15 +49,11 @@ import static com.example.daumantas.explorer.ImagePicker.minWidthQuality;
 @RuntimePermissions
 public class AddDescriptionFragment extends Fragment {
 
-    //LinearLayout slideshow;
-    int pictureWidth = 200;
-    int pictureHeigth = 113;
     ImageButton image1;
     ImageButton image2;
     ImageButton image3;
     ImageButton currentImage = null;
     final int RESULT_LOAD_IMAGE = 1;
-    static final int REQUEST_IMAGE_CAPTURE = 2;
 
     String mCurrentPhotoPath;
     File mCurrentImage;
@@ -141,19 +139,6 @@ public class AddDescriptionFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @NeedsPermission({android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void openGalery() {
-
-        //Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        //startActivityForResult(i, RESULT_LOAD_IMAGE);
-
-        //Intent chooseImageIntent = ImagePicker.getPickImageIntent(getActivity());
-        //startActivityForResult(chooseImageIntent, RESULT_LOAD_IMAGE);
-
-        /*
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }*/
-        //TODO: make intent picker
         dispatchTakePictureIntent();
     }
 
@@ -196,7 +181,6 @@ public class AddDescriptionFragment extends Fragment {
                         getContext().getPackageName() + ".fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                //startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
 
@@ -228,21 +212,10 @@ public class AddDescriptionFragment extends Fragment {
         //Bitmap bitmap = ImagePicker.getImageFromResult(getActivity(), resultCode, imageData);
 
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK) {
-            /*
-            Bundle extras = imageData.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            */
-            Bitmap bm;
-            boolean isCamera;
+
             Uri selectedImage;
             if(imageData == null){
-                bm = BitmapFactory.decodeFile(mCurrentPhotoPath);
-                //selectedImage = Uri.parse(mCurrentPhotoPath);
-                isCamera = true;
-                //currentImage.setImageBitmap(bmImg);
-                //currentImage.setTag("photo");
             }else{
-                isCamera = false;
                 selectedImage = imageData.getData();
 
                 String[] filePathColumn = {MediaStore.Images.Media.DATA};
@@ -252,60 +225,21 @@ public class AddDescriptionFragment extends Fragment {
                 cursor.moveToFirst();
 
                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                String filePath = cursor.getString(columnIndex);
+                mCurrentPhotoPath = cursor.getString(columnIndex);
                 cursor.close();
 
-                bm = BitmapFactory.decodeFile(filePath);
-
-
-                //currentImage.setImageBitmap(yourSelectedImage);
-                //currentImage.setTag("photo");
             }
 
-            //bm = getImageResized(getContext(), bm);
-            //int rotation = getRotation(getContext(), bm, isCamera);
-            //bm = rotate(bm, rotation);
-
-            currentImage.setImageBitmap(bm);
+            Picasso.with(getContext())
+                    .load(new File(mCurrentPhotoPath))
+                    .placeholder(R.drawable.ic_loading) // optional
+                    .resize(400,400)
+                    .centerCrop()
+                    .error(R.drawable.ic_error)
+                    .into(currentImage);
             currentImage.setTag("photo");
 
         }
-
-
-        // At the end remember to close the cursor or you will end with the RuntimeException!
-        //cursor.close();
-
-            /*
-            case Define.ALBUM_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-
-                    ArrayList< Uri> path = imageData.getParcelableArrayListExtra(Define.INTENT_PATH);
-                    for(Uri uri: path){
-                        try {
-                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
-                            ImageView image = new ImageView(getActivity());
-                            LinearLayout.LayoutParams ImageLayoutParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-                            ImageLayoutParams.height = (int) pxFromDp(getContext(), pictureSize);
-                            ImageLayoutParams.width = (int) pxFromDp(getContext(), pictureSize);
-                            int marginInPx = (int)pxFromDp(getContext(),3);
-                            ImageLayoutParams.setMargins(marginInPx,marginInPx,marginInPx,marginInPx);
-
-                            image.setLayoutParams(ImageLayoutParams);
-                            image.setScaleType(ImageView.ScaleType.FIT_XY);
-
-                            image.setImageBitmap(bitmap);
-
-                            // Adds the view to the layout
-                            slideshow.addView(image);
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    //You can get image path(ArrayList<Uri>) Version 0.6.2 or later
-                    break;
-                }*/
     }
 
     private static Bitmap decodeBitmap(Context context, Uri theUri, int sampleSize) {
