@@ -44,6 +44,7 @@ public class AddDescriptionFragment extends Fragment {
     ImageButton image2;
     ImageButton image3;
     ImageButton currentImage = null;
+    int hints = 0;
     final int RESULT_LOAD_IMAGE = 1;
 
     String mCurrentPhotoPath;
@@ -76,7 +77,6 @@ public class AddDescriptionFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
         image1 = (ImageButton)getActivity().findViewById(R.id.image1);
 
         image2 = (ImageButton)getActivity().findViewById(R.id.image2);
@@ -98,6 +98,7 @@ public class AddDescriptionFragment extends Fragment {
                         .into(image1);
                 image1.setTag(image1Path);
             }else{
+                image1.setImageResource(R.drawable.main_picture_frame);
                 image1.setTag("plus");
             }
             if(!image2Path.equals("plus")&&image2Path!=null){
@@ -110,6 +111,7 @@ public class AddDescriptionFragment extends Fragment {
                         .into(image2);
                 image2.setTag(image2Path);
             }else{
+                image1.setImageResource(R.drawable.picture_frame);
                 image2.setTag("plus");
             }
             if(!image3Path.equals("plus")&&image3Path!=null){
@@ -122,6 +124,7 @@ public class AddDescriptionFragment extends Fragment {
                         .into(image3);
                 image3.setTag(image3Path);
             }else{
+                image1.setImageResource(R.drawable.picture_frame);
                 image3.setTag("plus");
             }
 
@@ -129,6 +132,9 @@ public class AddDescriptionFragment extends Fragment {
             image1.setTag("plus");
             image2.setTag("plus");
             image3.setTag("plus");
+            image1.setImageResource(R.drawable.main_picture_frame);
+            image2.setImageResource(R.drawable.picture_frame);
+            image3.setImageResource(R.drawable.picture_frame);
         }
 
         image1.setOnClickListener(new View.OnClickListener() {
@@ -138,7 +144,7 @@ public class AddDescriptionFragment extends Fragment {
                     openGaleryWithCheck();
                     currentImage = image1;
                 }else{
-                    image1.setImageResource(R.drawable.picture_frame);
+                    image1.setImageResource(R.drawable.main_picture_frame);
                     image1.setTag("plus");
                     currentImage = null;
                 }

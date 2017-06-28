@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity
 
         if (Auth == false) {
             Log.d("mytag", "Auth is false, call showLogin()");
-            showlogin();
+            //showlogin();
         }
         //Nav drawer
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
