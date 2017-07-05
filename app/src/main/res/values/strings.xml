@@ -28,4 +28,5 @@
     <string name="hint1">Add a hint: (For example: Take the path past the dead tree)</string>
     <string name="hint2">Add a hint: (For example: Turn left after passing the river)</string>
     <string name="hint3">Add a hint: (For example: go around the hill and up the stairs)</string>
+    <string name="add_title">Add a title</string>
 </resources>

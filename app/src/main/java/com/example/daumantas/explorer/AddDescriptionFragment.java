@@ -1,7 +1,9 @@
 package com.example.daumantas.explorer;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,9 +15,12 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.squareup.picasso.Picasso;
@@ -44,7 +49,6 @@ public class AddDescriptionFragment extends Fragment {
     ImageButton image2;
     ImageButton image3;
     ImageButton currentImage = null;
-    int hints = 0;
     final int RESULT_LOAD_IMAGE = 1;
 
     String mCurrentPhotoPath;
@@ -73,18 +77,118 @@ public class AddDescriptionFragment extends Fragment {
 
     }
 
+    private boolean isEmpty(EditText etText) {
+        return etText.getText().toString().trim().length() == 0;
+    }
+
+    private boolean isEmptyImage(ImageButton image){
+        return image.getTag()=="plus";
+    }
+
+    private boolean entriesGood(EditText text1, EditText text2, EditText text3, ImageButton image){
+        boolean allGood = true;
+
+        if(isEmpty(text1)){
+            allGood = false;
+            text1.setBackgroundResource(R.drawable.red_border);
+        }else{
+            text1.setBackgroundResource(R.drawable.black_border);
+        }
+
+        if(isEmpty(text2)){
+            allGood = false;
+            text2.setBackgroundResource(R.drawable.red_border);
+        }else{
+            text2.setBackgroundResource(R.drawable.black_border);
+        }
+
+        if(isEmpty(text3)){
+            allGood = false;
+            text3.setBackgroundResource(R.drawable.red_border);
+        }else{
+            text3.setBackgroundResource(R.drawable.black_border);
+        }
+
+        if(isEmptyImage(image)){
+            allGood = false;
+            image.setImageResource(R.drawable.main_picture_frame_red);
+        }else{
+            //image.setImageResource(R.drawable.main_picture_frame);
+        }
+        return allGood;
+    }
+
+
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         image1 = (ImageButton)getActivity().findViewById(R.id.image1);
-
         image2 = (ImageButton)getActivity().findViewById(R.id.image2);
-
         image3 = (ImageButton)getActivity().findViewById(R.id.image3);
 
 
+        final EditText description = (EditText)getActivity().findViewById(R.id.description);
+        final EditText title = (EditText)getActivity().findViewById(R.id.title);
+        final EditText goodFor = (EditText)getActivity().findViewById(R.id.goodFor);
+        final EditText hint1 = (EditText)getActivity().findViewById(R.id.hint1);
+        final EditText hint2 = (EditText)getActivity().findViewById(R.id.hint2);
+        final EditText hint3 = (EditText)getActivity().findViewById(R.id.hint3);
+        Button nextBtn = (Button)getActivity().findViewById(R.id.descriptionNext);
+
+        nextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(entriesGood(title, description, goodFor, image1)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                    builder.setTitle("Complete");
+                    builder.setMessage("Would you like to add this location?");
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String descriptionText = description.getText().toString();
+                            String titleText = title.getText().toString();
+                            String goodForText = goodFor.getText().toString();
+                            String hint1Text = hint1.getText().toString();
+                            String hint2Text = hint2.getText().toString();
+                            String hint3Text = hint3.getText().toString();
+                            //String imagePath1 = image1.getTag().toString();
+                            //String imagePath2 = image2.getTag().toString();
+                            //String imagePath3 = image3.getTag().toString();
+
+                            Drawable image1Drawable = image1.getDrawable();
+                            Drawable image2Drawable;
+                            Drawable image3Drawable;
+                            if (isEmptyImage(image2)) {
+                                image2Drawable = null;
+                            } else {
+                                image2Drawable = image2.getDrawable();
+                            }
+
+                            if (isEmptyImage(image3)) {
+                                image3Drawable = null;
+                            } else {
+                                image3Drawable = image3.getDrawable();
+                            }
+                            ((MainActivity) getActivity()).handleDescription(titleText, descriptionText, goodForText, hint1Text, hint2Text, hint3Text,
+                                    image1Drawable, image2Drawable, image3Drawable);
+                        }
+                    });
+                    builder.setNegativeButton("No", null);
+                    builder.show();
+                }
+            }
+        });
+
+        //PICTURE FRAMES
+
         if (savedInstanceState != null) {
+            //Load text fields
+
+
+
+            //Load previous images if they exist or add default ones
             String image1Path = savedInstanceState.getString("image1Path");
             String image2Path = savedInstanceState.getString("image2Path");
             String image3Path = savedInstanceState.getString("image3Path");

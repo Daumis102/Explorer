@@ -14,8 +14,13 @@ import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NetworkError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
@@ -33,7 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText UserName, Password;
     String username, password;
     int MY_SOCKET_TIMEOUT_MS = 80000;
-    String login_url = "https://sham-bulk.000webhostapp.com/login.php";
+    String login_url = "http://explorer.we2host.lt/login.php";
     //String login_url = "https://10.0.2.2/login.php";
     AlertDialog.Builder builder;
 
@@ -94,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(String response) {
                             try {
-
+                                Log.d("mytag", response);
                                 JSONArray jsonArray = new JSONArray(response);
 
                                 JSONObject jsonObject = jsonArray.getJSONObject(0);
@@ -122,10 +127,28 @@ public class LoginActivity extends AppCompatActivity {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(LoginActivity.this, "Error",Toast.LENGTH_LONG).show();
+                            //Toast.makeText(LoginActivity.this, "Error",Toast.LENGTH_LONG).show();
                             VolleyLog.e("Error: ", error.getMessage());
                             Log.d("mytag", "error");
                             error.printStackTrace();
+
+                            if (error instanceof TimeoutError || error instanceof NoConnectionError) {
+                                Toast.makeText(getApplicationContext(), "Communication Error!", Toast.LENGTH_SHORT).show();
+                                Log.d("mytag","communication");
+
+                            } else if (error instanceof AuthFailureError) {
+                                Toast.makeText(getApplicationContext(), "Authentication Error!", Toast.LENGTH_SHORT).show();
+                                Log.d("mytag","authentification");
+                            } else if (error instanceof ServerError) {
+                                Log.d("mytag","server error");
+                                Toast.makeText(getApplicationContext(), "Server Side Error!", Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof NetworkError) {
+                                Log.d("mytag","networkerrpor");
+                                Toast.makeText(getApplicationContext(), "Network Error!", Toast.LENGTH_SHORT).show();
+                            } else if (error instanceof ParseError) {
+                                Log.d("mytag","parse error");
+                                Toast.makeText(getApplicationContext(), "Parse Error!", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     })
                     {

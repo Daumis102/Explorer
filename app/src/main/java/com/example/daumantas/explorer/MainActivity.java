@@ -1,8 +1,11 @@
 package com.example.daumantas.explorer;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -14,11 +17,25 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.NoConnectionError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
 import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -26,10 +43,12 @@ public class MainActivity extends AppCompatActivity
     boolean Auth;
     Welcome welcome;
     Fragment fragment;
-    String name;
+    String name = "";
     FragmentManager fragmentManager;
     private static final String TAG_MY_FRAGMENT = "currentFragment";
     LatLng locationToAdd;
+
+    private String UPLOAD_URL ="http://explorer.we2host.lt/MultipartUpload.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +60,7 @@ public class MainActivity extends AppCompatActivity
             name = savedInstanceState.getString("name");
             Auth = savedInstanceState.getBoolean("auth");
             Log.d("mytag","SavedInstance != null");
+            locationToAdd = (new LatLng(savedInstanceState.getDouble("lat"),savedInstanceState.getDouble("lng")));
         }else{
             Log.d("mytag","savedInstance == null");
             fragment = null;
@@ -50,7 +70,7 @@ public class MainActivity extends AppCompatActivity
 
         if (Auth == false) {
             Log.d("mytag", "Auth is false, call showLogin()");
-            //showlogin();
+            showlogin();
         }
         //Nav drawer
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -103,6 +123,10 @@ public class MainActivity extends AppCompatActivity
         Log.d("mytag", "Saving...");
         outState.putString("name", name);
         outState.putBoolean("auth", Auth);
+        if(locationToAdd!=null){
+            outState.putDouble("lat", locationToAdd.latitude);
+            outState.putDouble("lng", locationToAdd.longitude);
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -184,6 +208,132 @@ public class MainActivity extends AppCompatActivity
         locationToAdd = markerPos;
         changeFragment(AddDescriptionFragment.class);
     }
+    void handleDescription(final String title, final String description, final String goodFor,
+                           final String hint1, final String hint2, final String hint3,
+                           final Drawable image1, final Drawable image2, final Drawable image3){
+
+
+
+        final ProgressDialog loading = ProgressDialog.show(this,"Uploading...","Please wait...",false,false);
+        loading.setCanceledOnTouchOutside(false);
+
+            VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<NetworkResponse>() {
+                @Override
+                public void onResponse(NetworkResponse response) {
+                    loading.dismiss();
+                    String resultResponse = new String(response.data);
+                    Log.d("mytag", resultResponse);
+                    try {
+                        JSONObject result = new JSONObject(resultResponse);
+
+                        String status = result.getString("status");
+                        String message = result.getString("message");
+
+                        if (status.equals("success")) {
+                            // tell everybody you have succed upload image and post strings
+                            Log.i("Messsage", message);
+                        } else {
+                            Log.i("Unexpected", message);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    loading.dismiss();
+                    NetworkResponse networkResponse = error.networkResponse;
+                    String errorMessage = "Unknown error";
+                    if (networkResponse == null) {
+                        if (error.getClass().equals(TimeoutError.class)) {
+                            errorMessage = "Request timeout";
+                        } else if (error.getClass().equals(NoConnectionError.class)) {
+                            errorMessage = "Failed to connect server";
+                        }
+                    } else {
+                        String result = new String(networkResponse.data);
+                        try {
+
+                            JSONObject response = new JSONObject(result);
+                            String status = response.getString("status");
+                            String message = response.getString("message");
+
+                            Log.e("Error Status", status);
+                            Log.e("Error Message", message);
+
+                            if (networkResponse.statusCode == 404) {
+                                errorMessage = "Resource not found";
+                            } else if (networkResponse.statusCode == 401) {
+                                errorMessage = message+" Please login again";
+                            } else if (networkResponse.statusCode == 400) {
+                                errorMessage = message+ " Check your inputs";
+                            } else if (networkResponse.statusCode == 500) {
+                                errorMessage = message+" Something is getting wrong";
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    Log.i("Error", errorMessage);
+                    error.printStackTrace();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("title", title);
+                    params.put("description", description);
+                    params.put("goodFor", goodFor);
+
+                    if(!name.equals("")){
+                        params.put("name", name);
+                    }
+
+
+                    if(!hint1.equals("")){
+                        params.put("hint1",hint1);
+                    }
+                    if(!hint2.equals("")){
+                        params.put("hint2",hint2);
+                    }
+                    if(!hint3.equals("")){
+                        params.put("hint3",hint3);
+                    }
+                    params.put("Lat",Double.valueOf(locationToAdd.latitude).toString());
+                    params.put("Lng",Double.valueOf(locationToAdd.longitude).toString());
+
+                    return params;
+                }
+
+                @Override
+                protected Map<String, DataPart> getByteData() {
+                    Map<String, DataPart> params = new HashMap<>();
+                    // file name could found file base or direct access from real path
+                    // for now just get bitmap data from ImageView
+                    params.put("image1", new DataPart("image1.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image1), "image/jpeg"));
+                    if(image2!=null){
+                        params.put("image2", new DataPart("image2.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image2), "image/jpeg"));
+                    }
+                    if(image3!=null){
+                        params.put("image3", new DataPart("image3.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image3), "image/jpeg"));
+                    }
+                    return params;
+                }
+            };
+
+        MySingleton.getInstance(getBaseContext()).addToRequestque(multipartRequest);
+        }
+
+    public String getStringImage(Bitmap bmp){
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        Log.d("stringImage",encodedImage);
+        return encodedImage;
+    }
+
 
 
     @SuppressWarnings("StatementWithEmptyBody")

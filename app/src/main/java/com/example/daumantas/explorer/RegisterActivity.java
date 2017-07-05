@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -26,7 +27,7 @@ public class RegisterActivity extends AppCompatActivity {
     EditText Name,Email,UserName,Password,conPassword;
     String name,email,username,password,conpassword;
     AlertDialog.Builder builder;
-    String reg_url = "http://10.17.201.18/register.php";
+    String reg_url = "http://explorer.we2host.lt//register.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +84,7 @@ public class RegisterActivity extends AppCompatActivity {
                                     }
                                 }, new Response.ErrorListener(){
                             public void onErrorResponse(VolleyError error){
-
+                                error.printStackTrace();
                             }
                         }){
                             @Override
@@ -97,6 +98,10 @@ public class RegisterActivity extends AppCompatActivity {
                                 return params;
                             }
                         };
+                        stringRequest.setRetryPolicy(new DefaultRetryPolicy(
+                                5000,
+                                5,
+                                5));
                         MySingleton.getInstance(RegisterActivity.this).addToRequestque(stringRequest);
                     }
                 }
