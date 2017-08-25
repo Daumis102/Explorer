@@ -21,6 +21,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.NoConnectionError;
@@ -222,18 +223,15 @@ public class MainActivity extends AppCompatActivity
                 public void onResponse(NetworkResponse response) {
                     loading.dismiss();
                     String resultResponse = new String(response.data);
-                    Log.d("mytag", resultResponse);
                     try {
                         JSONObject result = new JSONObject(resultResponse);
 
-                        String status = result.getString("status");
-                        String message = result.getString("message");
+                        String status = result.getString("code");
 
                         if (status.equals("success")) {
-                            // tell everybody you have succed upload image and post strings
-                            Log.i("Messsage", message);
+                            Toast.makeText(MainActivity.this, "Spot has been sent for managers to review, thanks!", Toast.LENGTH_SHORT).show();
                         } else {
-                            Log.i("Unexpected", message);
+                            Toast.makeText(MainActivity.this, "Error has occured...", Toast.LENGTH_SHORT).show();
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -300,8 +298,8 @@ public class MainActivity extends AppCompatActivity
                     if(!hint3.equals("")){
                         params.put("hint3",hint3);
                     }
-                    params.put("Lat",Double.valueOf(locationToAdd.latitude).toString());
-                    params.put("Lng",Double.valueOf(locationToAdd.longitude).toString());
+                    params.put("lat",Double.valueOf(locationToAdd.latitude).toString());
+                    params.put("lng",Double.valueOf(locationToAdd.longitude).toString());
 
                     return params;
                 }
@@ -323,6 +321,8 @@ public class MainActivity extends AppCompatActivity
             };
 
         MySingleton.getInstance(getBaseContext()).addToRequestque(multipartRequest);
+
+
         }
 
     public String getStringImage(Bitmap bmp){
@@ -346,9 +346,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_addPlace) {
                 changeFragment(AddPlacesFragment.class);
 
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_searchPlaces) {
             //fragmentClass = Places.class;
-            changeFragment(Places.class);
+            changeFragment(SearchPlacesFragment.class);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

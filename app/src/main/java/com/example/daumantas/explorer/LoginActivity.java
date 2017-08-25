@@ -134,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
 
                             if (error instanceof TimeoutError || error instanceof NoConnectionError) {
                                 Toast.makeText(getApplicationContext(), "Communication Error!", Toast.LENGTH_SHORT).show();
-                                Log.d("mytag","communication");
+                                Log.d("mytag","communication error test");
 
                             } else if (error instanceof AuthFailureError) {
                                 Toast.makeText(getApplicationContext(), "Authentication Error!", Toast.LENGTH_SHORT).show();

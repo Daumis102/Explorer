@@ -16,6 +16,11 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
+import android.text.Html;
+import android.text.Spanned;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,6 +58,7 @@ public class AddDescriptionFragment extends Fragment {
 
     String mCurrentPhotoPath;
     File mCurrentImage;
+    TextWatcher textWatcher = null;
 
 
     public AddDescriptionFragment() {
@@ -110,6 +116,7 @@ public class AddDescriptionFragment extends Fragment {
         }
 
         if(isEmptyImage(image)){
+            Log.d("mytag", "image is empty");
             allGood = false;
             image.setImageResource(R.drawable.main_picture_frame_red);
         }else{
@@ -122,6 +129,7 @@ public class AddDescriptionFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
 
         image1 = (ImageButton)getActivity().findViewById(R.id.image1);
         image2 = (ImageButton)getActivity().findViewById(R.id.image2);
@@ -136,6 +144,36 @@ public class AddDescriptionFragment extends Fragment {
         final EditText hint3 = (EditText)getActivity().findViewById(R.id.hint3);
         Button nextBtn = (Button)getActivity().findViewById(R.id.descriptionNext);
 
+
+        textWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() > start) {
+                    String lastChar = Character.toString(s.charAt(start));
+
+                    if (lastChar.matches("[ .!?\\-]")) {
+                        goodFor.removeTextChangedListener(textWatcher);
+                        String newString = String.valueOf(s).substring(0,s.length()-1) + ", ";
+                        Spanned text = Html.fromHtml("<i>" + newString + "</i>");
+                        goodFor.setText(text);
+                        goodFor.setSelection(goodFor.getText().length());
+                        goodFor.addTextChangedListener(textWatcher);
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+
+        goodFor.addTextChangedListener(textWatcher);
         nextBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -171,6 +209,7 @@ public class AddDescriptionFragment extends Fragment {
                             } else {
                                 image3Drawable = image3.getDrawable();
                             }
+                            Log.d("images", image1.getTag().toString()+" "+ image2.getTag()+" "+ image3.getTag());
                             ((MainActivity) getActivity()).handleDescription(titleText, descriptionText, goodForText, hint1Text, hint2Text, hint3Text,
                                     image1Drawable, image2Drawable, image3Drawable);
                         }
@@ -185,8 +224,6 @@ public class AddDescriptionFragment extends Fragment {
 
         if (savedInstanceState != null) {
             //Load text fields
-
-
 
             //Load previous images if they exist or add default ones
             String image1Path = savedInstanceState.getString("image1Path");
@@ -215,7 +252,7 @@ public class AddDescriptionFragment extends Fragment {
                         .into(image2);
                 image2.setTag(image2Path);
             }else{
-                image1.setImageResource(R.drawable.picture_frame);
+                image2.setImageResource(R.drawable.picture_frame);
                 image2.setTag("plus");
             }
             if(!image3Path.equals("plus")&&image3Path!=null){
@@ -228,7 +265,7 @@ public class AddDescriptionFragment extends Fragment {
                         .into(image3);
                 image3.setTag(image3Path);
             }else{
-                image1.setImageResource(R.drawable.picture_frame);
+                image3.setImageResource(R.drawable.picture_frame);
                 image3.setTag("plus");
             }
 

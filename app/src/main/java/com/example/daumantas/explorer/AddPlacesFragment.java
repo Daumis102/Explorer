@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,6 +21,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -48,7 +51,7 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
     Context mContext;
     private GoogleApiClient mGoogleApiClient;
     private GoogleMap mMap;
-    private Location mLastKnownLocation = null;
+    private LatLng currentLocation;
     private CameraPosition mCameraPosition = null;
     private LatLng mDefaultLocation = new LatLng(40.76793169992044,
             -73.98180484771729);
@@ -69,7 +72,6 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
         }
 
         if (savedInstanceState != null) {
-            mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
@@ -146,7 +148,6 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
     public void onSaveInstanceState(Bundle outState) {
         if (mMap != null) {
             outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
-            outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
             if(newPlace!=null){
                 outState.putDouble("markerLng",newPlace.getPosition().longitude);
                 outState.putDouble("markerLat",newPlace.getPosition().latitude);
@@ -164,13 +165,6 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
         // Do other setup activities here too, as described elsewhere in this tutorial.
 
         //AddPlacesFragmentPermissionsDispatcher.updateLocationUIWithCheck(this); //UpdateLocationUI
-
-        if(previousMarkerLocation!=null){
-            addMarker(previousMarkerLocation);
-        }
-        else if (mLastKnownLocation != null) {
-            addMarker(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
-        }
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -247,20 +241,32 @@ public class AddPlacesFragment extends Fragment implements OnMapReadyCallback, G
     @NeedsPermission({Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION})
     void getDeviceLocation() {
 
-        mLastKnownLocation = LocationServices.FusedLocationApi
-                    .getLastLocation(mGoogleApiClient);
+        // Get LocationManager object from System Service LOCATION_SERVICE
+        LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
 
-        // Set the map's camera position to the current location of the device.
-        if (mCameraPosition != null) {
-            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
-        } else if (mLastKnownLocation != null) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(mLastKnownLocation.getLatitude(),
-                            mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-        } else {
-            Log.d(TAG, "Current location is null. Using defaults.");
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-            mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        }
+        // Create a criteria object to retrieve provider
+        Criteria criteria = new Criteria();
+
+        // Get the name of the best provider
+        String provider = locationManager.getBestProvider(criteria, true);
+
+        // Get Current Location
+        Location myLocation = locationManager.getLastKnownLocation(provider);
+
+        // set map type
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+
+        // Get latitude of the current location
+        double latitude = myLocation.getLatitude();
+
+        // Get longitude of the current location
+        double longitude = myLocation.getLongitude();
+
+        // Create a LatLng object for the current location
+        LatLng latLng = new LatLng(latitude, longitude);
+        // Zoom in the Google Map
+        addMarker(new LatLng(latitude, longitude));
+        CameraUpdate location = CameraUpdateFactory.newLatLngZoom(latLng, 15);
+        mMap.animateCamera(location);
     }
 }

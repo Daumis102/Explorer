@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bitmap
+    android:gravity="top|right"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/label_main_photo"/>
