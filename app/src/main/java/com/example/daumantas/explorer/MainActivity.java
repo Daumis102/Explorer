@@ -204,6 +204,24 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
+    public void changeFragment(Class fragClass, Bundle bundle)
+    {
+
+        try {
+            fragment = (Fragment) fragClass.newInstance();
+            fragment.setArguments(bundle);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment, TAG_MY_FRAGMENT)
+                .addToBackStack(null)
+                .commit();
+    }
+
     void handleMap(LatLng markerPos)
     {
         locationToAdd = markerPos;
@@ -223,6 +241,7 @@ public class MainActivity extends AppCompatActivity
                 public void onResponse(NetworkResponse response) {
                     loading.dismiss();
                     String resultResponse = new String(response.data);
+                    Log.d("mytag",resultResponse);
                     try {
                         JSONObject result = new JSONObject(resultResponse);
 

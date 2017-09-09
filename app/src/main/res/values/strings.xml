@@ -29,4 +29,11 @@
     <string name="hint2">Add a hint: (For example: Turn left after passing the river)</string>
     <string name="hint3">Add a hint: (For example: go around the hill and up the stairs)</string>
     <string name="add_title">Add a title</string>
+    <string name="description">Description</string>
+    <string name="goodForDesc">This place is good for:</string>
+    <string name="revealHint1">Unlock first hint (10 coins)</string>
+    <string name="revealHint2">Unlock second hint (10 coins)</string>
+    <string name="revealHint3">Unlock third hint (10 coins)</string>
+    <string name="uploadedBy">Uploaded by %1$s! </string>
+    <string name="start">Start Adventure!</string>
 </resources>
