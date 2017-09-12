@@ -7,5 +7,5 @@ import android.util.Log;
  */
 
 public class test {
-    Log.d("mytag", "added teext for adding tobranch")
+    Log.d("mytag", "this is local main branch")
 }
