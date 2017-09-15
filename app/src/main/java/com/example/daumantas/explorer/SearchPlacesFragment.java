@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -51,6 +53,9 @@ public class SearchPlacesFragment extends Fragment {
     private CustomListAdapter adapter;
     Activity mActivity;
     View globalView;
+    boolean showFilter = true;
+
+
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -188,22 +193,45 @@ public class SearchPlacesFragment extends Fragment {
         });
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view =  inflater.inflate(R.layout.fragment_search_places, container, false);
-
-
-
-
         return view;
     }
+
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        if(showFilter){
+            //make filter button visible and refresh actionBar
+            menu.findItem(R.id.action_filter_places).setVisible(true);
+            getActivity().supportInvalidateOptionsMenu();
+        }else{
+            //make filter invisible and refresh actionBar
+            menu.findItem(R.id.action_filter_places).setVisible(false);
+            getActivity().supportInvalidateOptionsMenu();
+        }
+
+
+    }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         hidePDialog();
+        //hide filter button
+        showFilter = false;
+        getActivity().supportInvalidateOptionsMenu();
     }
 
     private void hidePDialog() {

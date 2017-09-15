@@ -42,6 +42,8 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     boolean Auth;
+    MenuItem mFilter;
+    boolean showPlacesFilter = false;
     Welcome welcome;
     Fragment fragment;
     String name = "";
@@ -167,9 +169,38 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
+
+        /*
+        if(showPlacesFilter){
+            mFilter = menu.add("Filter");
+            mFilter.setIcon(R.drawable.ic_filter)
+                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        }else{
+            menu.clear();
+        }*/
+
+
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+        menu.findItem(R.id.action_filter_places).setVisible(false);
+
         return true;
+    }
+    void changeTopFragment(Class fragClass){
+        try {
+            fragment = (Fragment) fragClass.newInstance();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.top_fragment_container, fragment, TAG_MY_FRAGMENT)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -178,9 +209,12 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
+        Log.d("mytag", "menu item: " + String.valueOf(id));
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }else if (id  == R.id.action_filter_places) {
+            Log.d("mytag", "filter");
             return true;
         }
 
