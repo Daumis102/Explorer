@@ -1,7 +1,6 @@
 package com.example.daumantas.explorer;
 
 
-import android.Manifest;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -33,7 +32,7 @@ import permissions.dispatcher.RuntimePermissions;
 import static android.content.Context.SENSOR_SERVICE;
 
 @RuntimePermissions
-public class ShowDirectionFragment extends Fragment implements SensorEventListener {
+public class ShowDirectionFragment extends Fragment implements SensorEventListener{
 
     double  spotLat, spotLng;
     Float azimut;
@@ -41,6 +40,7 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
     Float degree, prevDirection = 0f;
     boolean degreeAvailable = false, allAnimationsEnded = true, hint1Open, hint2Open, hint3Open;
     ImageView arrow;
+    float distance;
     TextView tv_distance, tv_hint1, tv_hint2, tv_hint3;
     Button btn_hint1, btn_hint2, btn_hint3;
     long lastUpdate = 0;
@@ -48,6 +48,7 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
     public static final float ONE_FIFTY_FIVE_DEGRE_IN_RADIAN = 2.7052603f;
     public static final int animTime = 800;
     Location spotLocation;
+
 
     public ShowDirectionFragment() {
         // Required empty public constructor
@@ -76,10 +77,7 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
         mSensorManager = (SensorManager)getActivity().getSystemService(SENSOR_SERVICE);
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-
-
-    }
+   }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -93,12 +91,11 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
         super.onViewCreated(view, savedInstanceState);
 
         findLayoutItems();
-        startLocationUpdates();
+        ShowDirectionFragmentPermissionsDispatcher.startLocationUpdatesWithCheck(this);
         checkHints();
         setButtonListeners();
 
     }
-
     void findLayoutItems(){
         arrow = (ImageView)getActivity().findViewById(R.id.arrow);
         tv_distance = (TextView)getActivity().findViewById(R.id.distance);
@@ -180,12 +177,13 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
         super.onStop();
     }
 
-    @NeedsPermission({Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION})
+
+    @NeedsPermission({android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION})
     void startLocationUpdates(){
 
 
         long mLocTrackingInterval = 1000 * 1; // 1 sec
-        float trackingDistance = 0;
+        float trackingDistance = 50;
         LocationAccuracy trackingAccuracy = LocationAccuracy.HIGH;
 
         LocationParams.Builder builder = new LocationParams.Builder()
@@ -209,12 +207,19 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
                             if(allAnimationsEnded){
                                 rotateImage(angle360);
                             }
-
-
                         }
+
+                        // Get distance
+                        tv_distance.setText(metersToKmString(spotLocation.distanceTo(location)));
 
                     }
                 });
+    }
+
+    String metersToKmString(double meters){
+        String km;
+        km = String.valueOf(Math.round(meters/1000 * 100d)/100d);
+        return km;
     }
 
     void AnimateRotation2(float oldDir, float newDir,int animTime){
@@ -240,7 +245,8 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
         });
         arrow.startAnimation(rotateAnim);
     }
-     void RotateClockwise(float oldDir, float newDir, int animTime){
+
+    void RotateClockwise(float oldDir, float newDir, int animTime){
 
          final RotateAnimation secondRot = new RotateAnimation(0, newDir, arrow.getDrawable().getBounds().width()/2, arrow.getDrawable().getBounds().height()/2);
          secondRot.setDuration(animTime);
@@ -379,7 +385,7 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
         super.onResume();
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
         mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
-        startLocationUpdates();
+        //ShowDirectionFragmentPermissionsDispatcher.startLocationUpdatesWithCheck(this);
     }
 
     public void onPause() {
@@ -460,6 +466,5 @@ public class ShowDirectionFragment extends Fragment implements SensorEventListen
                 }
             }
         }
-
 }
 

@@ -19,7 +19,7 @@ import com.squareup.picasso.Picasso;
 public class PlaceInfoFragment extends Fragment {
 
     String title, description, goodFor, hint1, hint2, hint3, lat, lng, rating, uploadedBy, itemid,
-    imageFolder;
+            imageFolder;
 
     Button btn_hint1, btn_hint2, btn_hint3, btn_go;
     TextView tv_hint1, tv_hint2, tv_hint3, tv_description, tv_title, tv_goodFor, tv_rating, tv_uploader;
@@ -30,10 +30,13 @@ public class PlaceInfoFragment extends Fragment {
     public PlaceInfoFragment() {
         // Required empty public constructor
     }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
+
+            // get all passed info
             Bundle args = getArguments();
             title = args.getString("title");
             description = args.getString("description");
@@ -57,8 +60,8 @@ public class PlaceInfoFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_place_info, container, false);
     }
 
-    void fadeText(final Button button, final String newText, int animTime){
-        final Animation in = new AlphaAnimation(0.0f, 1.0f);
+    void fadeText(final Button button, final String newText, int animTime) {
+        final Animation in = new AlphaAnimation(0.0f, 1.0f); // craete transparency animation
         in.setDuration(animTime);
 
         final Animation out = new AlphaAnimation(1.0f, 0.0f);
@@ -71,9 +74,10 @@ public class PlaceInfoFragment extends Fragment {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                button.setText(newText);
-                button.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.transparent));
-                button.startAnimation(in);
+                button.setText(newText); // when texxt is invisible change it to a new one
+                button.setBackgroundColor(ContextCompat.getColor(getActivity(),
+                        R.color.transparent)); // set background to transparent
+                button.startAnimation(in); // fade in new text
             }
 
             @Override
@@ -82,7 +86,7 @@ public class PlaceInfoFragment extends Fragment {
             }
         });
 
-        button.startAnimation(out);
+        button.startAnimation(out); // start fading out animation
     }
 
 
@@ -98,20 +102,29 @@ public class PlaceInfoFragment extends Fragment {
 
     }
 
-    void checkHints(){
-        if(hint1.trim().length() == 0){ btn_hint1.setVisibility(View.GONE);}
-        if(hint2.trim().length() == 0){ btn_hint2.setVisibility(View.GONE);}
-        if(hint3.trim().length() == 0){ btn_hint3.setVisibility(View.GONE);}
+    void checkHints() {
+        //if hints are empty - don't show them
+        if (hint1.trim().length() == 0) {
+            btn_hint1.setVisibility(View.GONE);
+        }
+        if (hint2.trim().length() == 0) {
+            btn_hint2.setVisibility(View.GONE);
+        }
+        if (hint3.trim().length() == 0) {
+            btn_hint3.setVisibility(View.GONE);
+        }
 
     }
 
-    void assignHintButtonListeners(){
+    void assignHintButtonListeners() {
+
+        // if go was pressed show arrow with relevant details
         btn_go.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putDouble("lng",Double.valueOf(lng));
-                bundle.putDouble("lat",Double.valueOf(lat));
+                bundle.putDouble("lng", Double.valueOf(lng));
+                bundle.putDouble("lat", Double.valueOf(lat));
                 bundle.putString("hint1", hint1);
                 bundle.putString("hint2", hint2);
                 bundle.putString("hint3", hint3);
@@ -122,10 +135,11 @@ public class PlaceInfoFragment extends Fragment {
             }
         });
 
+
         btn_hint1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!hint1Open) {
+                if (!hint1Open) {
                     fadeText(btn_hint1, hint1, 1000);
                     hint1Open = true;
                 }
@@ -135,7 +149,7 @@ public class PlaceInfoFragment extends Fragment {
         btn_hint2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!hint2Open) {
+                if (!hint2Open) {
                     fadeText(btn_hint2, hint2, 1000);
                     hint2Open = true;
                 }
@@ -145,7 +159,7 @@ public class PlaceInfoFragment extends Fragment {
         btn_hint3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!hint1Open) {
+                if (!hint1Open) {
                     fadeText(btn_hint3, hint3, 1000);
                     hint3Open = true;
                 }
@@ -153,7 +167,7 @@ public class PlaceInfoFragment extends Fragment {
         });
     }
 
-    void setTexts(){
+    void setTexts() {
         tv_goodFor.setText(goodFor);
         tv_uploader.setText(getString(R.string.uploadedBy, uploadedBy));
         tv_rating.setText(rating);
@@ -161,35 +175,39 @@ public class PlaceInfoFragment extends Fragment {
         tv_description.setText(description);
     }
 
-    void findViews(){
-        btn_hint1 = (Button)getActivity().findViewById(R.id.btn_hint1);
-        btn_hint2 = (Button)getActivity().findViewById(R.id.btn_hint2);
-        btn_hint3 = (Button)getActivity().findViewById(R.id.btn_hint3);
-        btn_go = (Button)getActivity().findViewById(R.id.btn_go);
+    void findViews() {
+        //find buttons
+        btn_hint1 = (Button) getActivity().findViewById(R.id.btn_hint1);
+        btn_hint2 = (Button) getActivity().findViewById(R.id.btn_hint2);
+        btn_hint3 = (Button) getActivity().findViewById(R.id.btn_hint3);
+        btn_go = (Button) getActivity().findViewById(R.id.btn_go);
 
-        tv_hint1 = (TextView)getActivity().findViewById(R.id.hint1);
-        tv_hint2 = (TextView)getActivity().findViewById(R.id.hint2);
-        tv_hint3 = (TextView)getActivity().findViewById(R.id.hint3);
+        //find textViews
+        tv_hint1 = (TextView) getActivity().findViewById(R.id.hint1);
+        tv_hint2 = (TextView) getActivity().findViewById(R.id.hint2);
+        tv_hint3 = (TextView) getActivity().findViewById(R.id.hint3);
 
-        tv_goodFor = (TextView)getActivity().findViewById(R.id.goodFor);
-        tv_uploader = (TextView)getActivity().findViewById(R.id.uploader);
-        tv_rating = (TextView)getActivity().findViewById(R.id.rating);
-        tv_title = (TextView)getActivity().findViewById(R.id.title);
-        tv_description = (TextView)getActivity().findViewById(R.id.description);
+        tv_goodFor = (TextView) getActivity().findViewById(R.id.goodFor);
+        tv_uploader = (TextView) getActivity().findViewById(R.id.uploader);
+        tv_rating = (TextView) getActivity().findViewById(R.id.rating);
+        tv_title = (TextView) getActivity().findViewById(R.id.title);
+        tv_description = (TextView) getActivity().findViewById(R.id.description);
 
-        view_image1 = (ImageView)getActivity().findViewById(R.id.image1);
-        view_image2 = (ImageView)getActivity().findViewById(R.id.image2);
-        view_image3 = (ImageView)getActivity().findViewById(R.id.image3);
+        //find image views
+        view_image1 = (ImageView) getActivity().findViewById(R.id.image1);
+        view_image2 = (ImageView) getActivity().findViewById(R.id.image2);
+        view_image3 = (ImageView) getActivity().findViewById(R.id.image3);
 
     }
 
-    void showImages(){
-
+    void showImages() {
+        //load images to imageViews with picasso
         Picasso.with(getActivity())
                 .load(imageFolder + "/1.jpg")
                 .into(view_image1, new Callback() {
                     @Override
-                    public void onSuccess() {}
+                    public void onSuccess() {
+                    }
 
                     @Override
                     public void onError() {
@@ -201,7 +219,8 @@ public class PlaceInfoFragment extends Fragment {
                 .load(imageFolder + "/2.jpg")
                 .into(view_image2, new Callback() {
                     @Override
-                    public void onSuccess() {}
+                    public void onSuccess() {
+                    }
 
                     @Override
                     public void onError() {
@@ -213,7 +232,8 @@ public class PlaceInfoFragment extends Fragment {
                 .load(imageFolder + "/3.jpg")
                 .into(view_image3, new Callback() {
                     @Override
-                    public void onSuccess() {}
+                    public void onSuccess() {
+                    }
 
                     @Override
                     public void onError() {

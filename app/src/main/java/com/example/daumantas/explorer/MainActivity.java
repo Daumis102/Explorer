@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -17,7 +16,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,8 +32,11 @@ import com.google.android.gms.maps.model.LatLng;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
@@ -50,22 +51,38 @@ public class MainActivity extends AppCompatActivity
     FragmentManager fragmentManager;
     private static final String TAG_MY_FRAGMENT = "currentFragment";
     LatLng locationToAdd;
+    static List<Place> placesList = new ArrayList<Place>();
+    static boolean placesListUpdated = false;
+    boolean filterOn = false;
 
-    private String UPLOAD_URL ="http://explorer.we2host.lt/MultipartUpload.php";
+    private String UPLOAD_URL = "http://explorer.we2host.lt/MultipartUpload.php";
+
+    public static void setPlacesList(List<Place> list) {
+        placesList = list;
+        placesListUpdated = true;
+    }
+
+    public static boolean getIsPlacesListUpdated() {
+        return placesListUpdated;
+    }
+
+    public static List<Place> getPlacesList() {
+        return placesList;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (savedInstanceState != null){
+        if (savedInstanceState != null) {
             fragment = getSupportFragmentManager().findFragmentByTag(TAG_MY_FRAGMENT);
             name = savedInstanceState.getString("name");
             Auth = savedInstanceState.getBoolean("auth");
-            Log.d("mytag","SavedInstance != null");
-            locationToAdd = (new LatLng(savedInstanceState.getDouble("lat"),savedInstanceState.getDouble("lng")));
-        }else{
-            Log.d("mytag","savedInstance == null");
+            Log.d("mytag", "SavedInstance != null");
+            locationToAdd = (new LatLng(savedInstanceState.getDouble("lat"), savedInstanceState.getDouble("lng")));
+        } else {
+            Log.d("mytag", "savedInstance == null");
             fragment = null;
             Auth = false;
         }
@@ -101,10 +118,10 @@ public class MainActivity extends AppCompatActivity
         //login activity
         if (requestCode == 2) { //result->request
             if (data != null) {
-                Log.d("mytag","OnActivityResult");
+                Log.d("mytag", "OnActivityResult");
                 name = data.getStringExtra("name");
                 Auth = true;
-                Log.d("mytag",Boolean.toString(Auth));
+                Log.d("mytag", Boolean.toString(Auth));
                 Bundle bundle = new Bundle();
                 bundle.putString("name", name);
 
@@ -114,11 +131,12 @@ public class MainActivity extends AppCompatActivity
                 welcome.setArguments(bundle);
                 fragmentTransaction.add(R.id.fragment_container, welcome);
                 fragmentTransaction.commit();
-            }else{
+            } else {
                 finish();
             }
         }
     }
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -126,7 +144,7 @@ public class MainActivity extends AppCompatActivity
         Log.d("mytag", "Saving...");
         outState.putString("name", name);
         outState.putBoolean("auth", Auth);
-        if(locationToAdd!=null){
+        if (locationToAdd != null) {
             outState.putDouble("lat", locationToAdd.latitude);
             outState.putDouble("lng", locationToAdd.longitude);
         }
@@ -134,7 +152,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     void showlogin() {
-        Log.d("mytag","showLogin()");
+        Log.d("mytag", "showLogin()");
         Intent intent = new Intent(MainActivity.this.getApplicationContext(), LoginActivity.class);
         startActivityForResult(intent, 2);
     }
@@ -147,7 +165,7 @@ public class MainActivity extends AppCompatActivity
         } else {
 
             int count = getSupportFragmentManager().getBackStackEntryCount();
-            if(count==0){
+            if (count == 0) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
                 builder.setTitle("Leave?");
@@ -160,7 +178,7 @@ public class MainActivity extends AppCompatActivity
                 });
                 builder.setNegativeButton("No", null);
                 builder.show();
-            }else{
+            } else {
                 super.onBackPressed();
             }
 
@@ -170,17 +188,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
-
-        /*
-        if(showPlacesFilter){
-            mFilter = menu.add("Filter");
-            mFilter.setIcon(R.drawable.ic_filter)
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        }else{
-            menu.clear();
-        }*/
-
-
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
 
@@ -188,7 +195,8 @@ public class MainActivity extends AppCompatActivity
 
         return true;
     }
-    void changeTopFragment(Class fragClass){
+
+    void changeTopFragment(Class fragClass) {
         try {
             fragment = (Fragment) fragClass.newInstance();
 
@@ -198,7 +206,7 @@ public class MainActivity extends AppCompatActivity
 
         fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.top_fragment_container, fragment, TAG_MY_FRAGMENT)
+                .replace(R.id.top_fragment_container, fragment, "currentTopFragment")
                 .addToBackStack(null)
                 .commit();
     }
@@ -209,20 +217,25 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        Log.d("mytag", "menu item: " + String.valueOf(id));
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }else if (id  == R.id.action_filter_places) {
-            Log.d("mytag", "filter");
+        } else if (id == R.id.action_filter_places) {
+            if (!filterOn) {
+                changeTopFragment(FilterFragment.class);
+                filterOn = true;
+            } else {
+                changeTopFragment(EmptyFragment.class);
+                filterOn = false;
+            }
+
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void changeFragment(Class fragClass)
-    {
+    public void changeFragment(Class fragClass) {
 
         try {
             fragment = (Fragment) fragClass.newInstance();
@@ -238,8 +251,7 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    public void changeFragment(Class fragClass, Bundle bundle)
-    {
+    public void changeFragment(Class fragClass, Bundle bundle) {
 
         try {
             fragment = (Fragment) fragClass.newInstance();
@@ -256,137 +268,132 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    void handleMap(LatLng markerPos)
-    {
+    void handleMap(LatLng markerPos) {
         locationToAdd = markerPos;
         changeFragment(AddDescriptionFragment.class);
     }
+
     void handleDescription(final String title, final String description, final String goodFor,
                            final String hint1, final String hint2, final String hint3,
-                           final Drawable image1, final Drawable image2, final Drawable image3){
+                           final Drawable image1, final Drawable image2, final Drawable image3) {
 
 
-
-        final ProgressDialog loading = ProgressDialog.show(this,"Uploading...","Please wait...",false,false);
+        final ProgressDialog loading = ProgressDialog.show(this, "Uploading...", "Please wait...", false, false);
         loading.setCanceledOnTouchOutside(false);
 
-            VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<NetworkResponse>() {
-                @Override
-                public void onResponse(NetworkResponse response) {
-                    loading.dismiss();
-                    String resultResponse = new String(response.data);
-                    Log.d("mytag",resultResponse);
+        VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST, UPLOAD_URL, new Response.Listener<NetworkResponse>() {
+            @Override
+            public void onResponse(NetworkResponse response) {
+                loading.dismiss();
+                String resultResponse = new String(response.data);
+                Log.d("mytag", resultResponse);
+                try {
+                    JSONObject result = new JSONObject(resultResponse);
+
+                    String status = result.getString("code");
+
+                    if (status.equals("success")) {
+                        Toast.makeText(MainActivity.this, "Spot has been sent for managers to review, thanks!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Error has occured...", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                loading.dismiss();
+                NetworkResponse networkResponse = error.networkResponse;
+                String errorMessage = "Unknown error";
+                if (networkResponse == null) {
+                    if (error.getClass().equals(TimeoutError.class)) {
+                        errorMessage = "Request timeout";
+                    } else if (error.getClass().equals(NoConnectionError.class)) {
+                        errorMessage = "Failed to connect server";
+                    }
+                } else {
+                    String result = new String(networkResponse.data);
                     try {
-                        JSONObject result = new JSONObject(resultResponse);
 
-                        String status = result.getString("code");
+                        JSONObject response = new JSONObject(result);
+                        String status = response.getString("status");
+                        String message = response.getString("message");
 
-                        if (status.equals("success")) {
-                            Toast.makeText(MainActivity.this, "Spot has been sent for managers to review, thanks!", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(MainActivity.this, "Error has occured...", Toast.LENGTH_SHORT).show();
+                        Log.e("Error Status", status);
+                        Log.e("Error Message", message);
+
+                        if (networkResponse.statusCode == 404) {
+                            errorMessage = "Resource not found";
+                        } else if (networkResponse.statusCode == 401) {
+                            errorMessage = message + " Please login again";
+                        } else if (networkResponse.statusCode == 400) {
+                            errorMessage = message + " Check your inputs";
+                        } else if (networkResponse.statusCode == 500) {
+                            errorMessage = message + " Something is getting wrong";
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    loading.dismiss();
-                    NetworkResponse networkResponse = error.networkResponse;
-                    String errorMessage = "Unknown error";
-                    if (networkResponse == null) {
-                        if (error.getClass().equals(TimeoutError.class)) {
-                            errorMessage = "Request timeout";
-                        } else if (error.getClass().equals(NoConnectionError.class)) {
-                            errorMessage = "Failed to connect server";
-                        }
-                    } else {
-                        String result = new String(networkResponse.data);
-                        try {
+                Log.i("Error", errorMessage);
+                error.printStackTrace();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("title", title);
+                params.put("description", description);
+                params.put("goodFor", goodFor);
 
-                            JSONObject response = new JSONObject(result);
-                            String status = response.getString("status");
-                            String message = response.getString("message");
+                // add posting date
+                Calendar c = Calendar.getInstance();
+                SimpleDateFormat df = new SimpleDateFormat("YYYY/MM/DD");
+                String formattedDate = df.format(c.getTime());
+                params.put("date", formattedDate);
 
-                            Log.e("Error Status", status);
-                            Log.e("Error Message", message);
-
-                            if (networkResponse.statusCode == 404) {
-                                errorMessage = "Resource not found";
-                            } else if (networkResponse.statusCode == 401) {
-                                errorMessage = message+" Please login again";
-                            } else if (networkResponse.statusCode == 400) {
-                                errorMessage = message+ " Check your inputs";
-                            } else if (networkResponse.statusCode == 500) {
-                                errorMessage = message+" Something is getting wrong";
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    Log.i("Error", errorMessage);
-                    error.printStackTrace();
-                }
-            }) {
-                @Override
-                protected Map<String, String> getParams() {
-                    Map<String, String> params = new HashMap<>();
-                    params.put("title", title);
-                    params.put("description", description);
-                    params.put("goodFor", goodFor);
-
-                    if(!name.equals("")){
-                        params.put("name", name);
-                    }
-
-
-                    if(!hint1.equals("")){
-                        params.put("hint1",hint1);
-                    }
-                    if(!hint2.equals("")){
-                        params.put("hint2",hint2);
-                    }
-                    if(!hint3.equals("")){
-                        params.put("hint3",hint3);
-                    }
-                    params.put("lat",Double.valueOf(locationToAdd.latitude).toString());
-                    params.put("lng",Double.valueOf(locationToAdd.longitude).toString());
-
-                    return params;
+                if (!name.equals("")) {
+                    params.put("name", name);
                 }
 
-                @Override
-                protected Map<String, DataPart> getByteData() {
-                    Map<String, DataPart> params = new HashMap<>();
-                    // file name could found file base or direct access from real path
-                    // for now just get bitmap data from ImageView
-                    params.put("image1", new DataPart("image1.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image1), "image/jpeg"));
-                    if(image2!=null){
-                        params.put("image2", new DataPart("image2.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image2), "image/jpeg"));
-                    }
-                    if(image3!=null){
-                        params.put("image3", new DataPart("image3.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image3), "image/jpeg"));
-                    }
-                    return params;
+
+                if (!hint1.equals("")) {
+                    params.put("hint1", hint1);
                 }
-            };
+                if (!hint2.equals("")) {
+                    params.put("hint2", hint2);
+                }
+                if (!hint3.equals("")) {
+                    params.put("hint3", hint3);
+                }
+                params.put("lat", Double.valueOf(locationToAdd.latitude).toString());
+                params.put("lng", Double.valueOf(locationToAdd.longitude).toString());
+
+                return params;
+            }
+
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+                // file name could found file base or direct access from real path
+                // for now just get bitmap data from ImageView
+                params.put("image1", new DataPart("image1.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image1), "image/jpeg"));
+                if (image2 != null) {
+                    params.put("image2", new DataPart("image2.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image2), "image/jpeg"));
+                }
+                if (image3 != null) {
+                    params.put("image3", new DataPart("image3.jpg", AppHelper.getFileDataFromDrawable(getBaseContext(), image3), "image/jpeg"));
+                }
+                return params;
+            }
+        };
 
         MySingleton.getInstance(getBaseContext()).addToRequestque(multipartRequest);
 
 
-        }
-
-    public String getStringImage(Bitmap bmp){
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageBytes = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-        Log.d("stringImage",encodedImage);
-        return encodedImage;
     }
-
 
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -397,18 +404,30 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_addPlace) {
-                changeFragment(AddPlacesFragment.class);
+            // Open addPlace Fragment
+            changeFragment(AddPlacesFragment.class);
+
+            // If places filter is on - close it
+            if (filterOn) {
+                changeTopFragment(EmptyFragment.class);
+            }
 
         } else if (id == R.id.nav_searchPlaces) {
-            //fragmentClass = Places.class;
             changeFragment(SearchPlacesFragment.class);
+
+            // If places filter is on - close it
+            if (filterOn) {
+                changeTopFragment(EmptyFragment.class);
+            }
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-    void showDefaultScreen(){
+
+    void showDefaultScreen() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.add(R.id.fragment_container, welcome);

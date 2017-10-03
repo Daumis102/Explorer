@@ -1,12 +1,14 @@
 package com.example.daumantas.explorer;
 
 import java.util.ArrayList;
+import java.util.Date;
 
-public class Place {
+public class Place{
     private String title, thumbnailUrl;
     private double rating;
     private ArrayList<String> goodFor;
     private String description, lat, lng, hint1 = "", hint2 = "", hint3 = "", name, id, imageFolder;
+    private Date datePosted;
 
     public Place() {
     }
@@ -17,6 +19,11 @@ public class Place {
         this.goodFor = goodFor;
         this.thumbnailUrl = thumbnailUrl;
         this.rating = rating;
+    }
+
+
+    public Date getDatePosted(){
+        return datePosted;
     }
 
 
@@ -125,5 +132,7 @@ public class Place {
     public void setGoodFor(ArrayList<String> goodFor) {
         this.goodFor = goodFor;
     }
+
+    public void setDatePosted(Date date){ this.datePosted = date; }
 
 }

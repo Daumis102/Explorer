@@ -37,4 +37,10 @@
     <string name="uploadedBy">Uploaded by %1$s! </string>
     <string name="start">Start Adventure!</string>
     <string name="filter">Filter places</string>
+    <string name="sort">Order:</string>
+    <string name="minRating">Minimum Rating</string>
+    <string name="postedFrom">Show only posted from</string>
+    <string name="postedTo">to</string>
+    <string name="chooseDate">Choose date..</string>
+    <string name="resetFilter">Reset</string>
 </resources>

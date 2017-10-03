@@ -31,7 +31,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,16 +52,16 @@ public class SearchPlacesFragment extends Fragment {
 
     // Movies json url
     private static final String url = "http://explorer.we2host.lt/FetchPlaces.php";
-    private  static final String uploadsUrl = "http://explorer.we2host.lt/uploads/";
-    private ProgressDialog pDialog;
-    private List<Place> placesList = new ArrayList<Place>();
-    private ListView listView;
-    private CustomListAdapter adapter;
+    private static final String uploadsUrl = "http://explorer.we2host.lt/uploads/";
+    boolean isPlacesListUpdated;
     Activity mActivity;
     View globalView;
     boolean showFilter = true;
-
-
+    private ProgressDialog pDialog;
+    private List<Place> placesList = new ArrayList<Place>();
+    private List<Place> updatedPlacesList = new ArrayList<Place>();
+    private ListView listView;
+    private CustomListAdapter adapter;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -69,7 +75,6 @@ public class SearchPlacesFragment extends Fragment {
         // Showing progress dialog before making http request
         pDialog.setMessage("Loading...");
         pDialog.show();
-        //TEST req
 
         if (placesList.isEmpty()) {
             StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
@@ -97,6 +102,7 @@ public class SearchPlacesFragment extends Fragment {
                             place.setLng(obj.getString("lng"));
                             place.setName(obj.getString("name"));
                             place.setRating(Double.valueOf(obj.getString("rating")));
+                            place.setDatePosted(StringToDate(obj.getString("date")));
 
                             // goodFor is json array
                             JSONArray goodForArray = new JSONArray(obj.getString("goodFor"));
@@ -110,13 +116,20 @@ public class SearchPlacesFragment extends Fragment {
                             placesList.add(place);
                         }
 
+                        /*
+                        //send list of places to mainActivity
+                        MainActivity.setPlacesList(placesList);
+                        /*
                         adapter = new CustomListAdapter(mActivity, placesList);
                         listView = (ListView) globalView.findViewById(R.id.list);
                         listView.setAdapter(adapter);
                         adapter.notifyDataSetChanged();
                         setItemListener(listView, placesList);
-                        hidePDialog();
+                        */
+                        reloadPlacesList(placesList);
 
+                        hidePDialog();
+                        //TODO after filter is appliead, reload searchPlacesFragment with a bundle of filter options
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -152,27 +165,83 @@ public class SearchPlacesFragment extends Fragment {
             });
 
             MySingleton.getInstance(this.getActivity()).addToRequestque(stringRequest); // checks if there is a queue, if there is, puts request to it
-        }else{
-            //create instance of customAdapter and assign it to a list view
-            adapter = new CustomListAdapter(mActivity, placesList);
-            listView = (ListView) globalView.findViewById(R.id.list);
-            listView.setAdapter(adapter);
-            adapter.notifyDataSetChanged();
-            setItemListener(listView, placesList);
-            hidePDialog();
         }
-
 
     }
 
+    void reloadPlacesList(List<Place> newList) {
+        adapter = new CustomListAdapter(mActivity, newList);
+        listView = (ListView) globalView.findViewById(R.id.list);
+        listView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+        setItemListener(listView, newList);
 
-    public void setItemListener(final ListView listview, final List<Place> placesList){
+    }
+
+    public void updateList(Bundle params) {
+        String order = params.getString("order");
+        int rating = params.getInt("minRating");
+        Date dateFrom = StringToDate(params.getString("dateFrom"));
+        Date dateTo = StringToDate(params.getString("dateTo"));
+
+        List<Place> filteredPlacesList = new ArrayList<Place>();
+        //iterate through placesList and sort out only those that are suitable
+        for (final Place place : placesList) {
+            if (place.getRating() >= rating &&
+                    place.getDatePosted().compareTo(dateFrom) >= 0 &&
+                    place.getDatePosted().compareTo(dateTo) <= 0) {
+                filteredPlacesList.add(place);
+            }
+        }
+
+        // order new list
+        switch (order) {
+            case "Newest First":
+                Collections.sort(filteredPlacesList, new Comparator<Place>() {
+                    public int compare(Place p1, Place p2) {
+                        return p1.getDatePosted().compareTo(p2.getDatePosted());
+                    }
+                });
+                //TODO fix these
+            case "Closest First":
+                Collections.sort(filteredPlacesList, new Comparator<Place>() {
+                    public int compare(Place p1, Place p2) {
+                        return p1.getDatePosted().compareTo(p2.getDatePosted());
+                    }
+                });
+            case "Best Rated First":
+                Collections.sort(filteredPlacesList, new Comparator<Place>() {
+                    public int compare(Place p1, Place p2) {
+                        return p1.getDatePosted().compareTo(p2.getDatePosted());
+                    }
+                });
+                break;
+        }
+
+        reloadPlacesList(filteredPlacesList);
+    }
+
+    Date StringToDate(String strDate) {
+        Log.d("mytag", "string to date: " + strDate);
+        DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+        Date newDate = null;
+        try {
+            newDate = df.parse(strDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return newDate;
+    }
+
+
+    public void setItemListener(final ListView listview, final List<Place> placesList) {
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 placesList.get(position); // here you will get the clicked item from
                 //your placeslist and you can check by getting a title  by using this
 
+                //pack all info and open PlaceInfo fragment
                 Bundle bundle = new Bundle();
                 bundle.putString("title", placesList.get(position).getTitle());
                 bundle.putString("description", placesList.get(position).getDescription());
@@ -182,12 +251,14 @@ public class SearchPlacesFragment extends Fragment {
                 bundle.putString("hint3", placesList.get(position).getHint3());
                 bundle.putString("id", placesList.get(position).getId());
                 bundle.putString("lat", placesList.get(position).getLat());
-                bundle.putString("lng",placesList.get(position).getLng());
-                bundle.putString("rating",String.valueOf(placesList.get(position).getRating()));
-                bundle.putString("name",placesList.get(position).getName());
-                bundle.putString("imageFolder",placesList.get(position).getImageFolder());
+                bundle.putString("lng", placesList.get(position).getLng());
+                bundle.putString("rating", String.valueOf(placesList.get(position).getRating()));
+                bundle.putString("name", placesList.get(position).getName());
+                bundle.putString("imageFolder", placesList.get(position).getImageFolder());
 
                 ((MainActivity) getActivity()).changeFragment(PlaceInfoFragment.class, bundle);
+                showFilter = false;
+                getActivity().supportInvalidateOptionsMenu();
 
             }
         });
@@ -202,7 +273,7 @@ public class SearchPlacesFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view =  inflater.inflate(R.layout.fragment_search_places, container, false);
+        View view = inflater.inflate(R.layout.fragment_search_places, container, false);
         return view;
     }
 
@@ -211,11 +282,11 @@ public class SearchPlacesFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
-        if(showFilter){
+        if (showFilter) {
             //make filter button visible and refresh actionBar
             menu.findItem(R.id.action_filter_places).setVisible(true);
             getActivity().supportInvalidateOptionsMenu();
-        }else{
+        } else {
             //make filter invisible and refresh actionBar
             menu.findItem(R.id.action_filter_places).setVisible(false);
             getActivity().supportInvalidateOptionsMenu();
@@ -241,5 +312,10 @@ public class SearchPlacesFragment extends Fragment {
         }
     }
 
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        showFilter = true;
+        getActivity().supportInvalidateOptionsMenu();
+    }
 }
